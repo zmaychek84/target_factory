@@ -1,0 +1,824 @@
+/*
+ * Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+ * Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+syntax = "proto3";
+
+package vitis.ai;
+
+message Target {
+  message BankGroup {
+    string name = 1;
+    string type = 9;
+    uint32 base_id = 2;
+    uint32 bank_num = 3;
+    uint32 bank_width = 4;
+    uint32 bank_depth = 5;
+    uint32 word_width = 6;
+    bool cyclic = 7;
+    message AdjustableWordWidth {
+      uint32 scale = 1;
+      enum WordWidthSwitch {
+        DataBit_x_BankDepth = 0;
+        DataBit_x_BankWidth = 1;
+      }
+      WordWidthSwitch word_width_switch = 2;
+    }
+    AdjustableWordWidth adjustable_word_width = 8;
+    repeated Memtile memtile = 10;
+  }
+
+  message OverlayInfo {
+    uint32 aienum_row_num = 1;
+    uint32 aienum_col_num = 2;
+    uint32 memtile_num = 3;
+    uint32 shimtile_num = 4;
+    uint32 memtile_row_num = 5;
+    uint32 cascade_len = 6;
+    uint32 aie_row_offset = 7;
+    uint32 aie_col_offset = 8;
+    uint32 aie_row_stride = 9;
+    uint32 aie_col_stride = 10;
+    uint32 aie_read_split_stream_num_per_col = 11;
+    uint32 aie_read_broadcast_stream_num_per_col = 12;
+    uint32 aie_write_merge_stream_num_per_col = 13;
+    uint32 shim_read_stream_num_per_col = 14;
+    uint32 shim_write_stream_num_per_col = 15;
+  }
+
+  message Aietile {
+    string name = 1;
+    uint32 row = 2;
+    uint32 col = 3;
+    uint32 memory_size = 4;
+    uint32 stack_size = 5;
+    uint32 bd_nums = 6;
+    uint32 lock_nums = 7;
+    uint32 program_memory_size = 8;
+    string rounding_mode = 9;
+  }
+
+  message Memtile {
+    string name = 1;
+    string type = 2;
+    uint32 row = 3;
+    uint32 col = 4;
+    uint32 bank_num = 5;
+    uint32 bank_size_per_bank = 6;
+    uint32 bd_nums = 7;
+    uint32 lock_nums = 8;
+    uint32 row_offset = 9;
+    uint32 col_offset = 10;
+  }
+
+  message Shimtile {
+    string name = 1;
+    uint32 row = 2;
+    uint32 col = 3;
+    uint32 bd_nums = 4;
+    uint32 lock_nums = 5;
+  }
+
+  message Load {
+    message MeanvalueReduction { string meanvalue_bank = 1; }
+    message FixIFMPortWidth { uint32 port_width = 1; }
+    message WeightSplit { bool wgt_split = 1; }
+    message LoadMode {
+      enum SrcType {
+        ddr = 0;
+        imm = 1;
+      }
+      repeated SrcType src_type = 1;
+    }
+    uint32 channel_parallel = 1;
+    repeated string output_bank = 2;
+    MeanvalueReduction meanvalue_reduction = 3;
+    FixIFMPortWidth fix_ifm_port_width = 4;
+    WeightSplit weight_split = 5;
+    LoadMode load_mode = 6;
+    uint32 load_ifm_port_num = 7;
+    uint32 load_weights_port_num = 8;
+    uint32 stream_num = 9;
+  }
+
+  message Save {
+    message FixIFMPortWidth { uint32 port_width = 1; }
+    uint32 channel_parallel = 1;
+    repeated string input_bank = 2;
+    FixIFMPortWidth fix_ifm_port_width = 3;
+    bool argmax = 4;
+    uint32 stream_num = 5;
+  }
+
+  message Nonlinear {
+    enum NonlinearType {
+      relu = 0;
+      prelu = 1;
+      leaky_relu = 2;
+      relu_six = 3;
+      hsigmoid = 4;
+      hswish = 5;
+      sigmoid = 6;
+      tanh = 7;
+      qlinear_sigmoid = 8;
+      qlinear_swish = 9;
+      qsilu = 10;
+    }
+    repeated NonlinearType nonlinear_type = 1;
+  }
+
+  message PadLimit {
+    string pad_left = 1;
+    string pad_right = 2;
+    string pad_top = 3;
+    string pad_bottom = 4;
+  }
+
+  message Conv {
+    uint32 input_channel_parallel = 1;
+    uint32 output_channel_parallel = 2;
+    uint32 pixel_parallel = 3;
+    repeated string input_bank = 4;
+    message OutputBankGroup { repeated string output_bank = 1; }
+    repeated OutputBankGroup output_bank_group = 5;
+    string weight_bank = 6;
+    string bias_bank = 7;
+    message ChannelAugmentation { uint32 channel_num = 1; }
+    ChannelAugmentation channel_augmentation = 8;
+    Nonlinear nonlinear = 9;
+    repeated string output_bank = 10;
+    message ConvLimit {
+      string kernel_size = 1;
+      string stride = 2;
+      string stride_out_h = 3;
+      uint32 inner_loop_limit = 4;
+      uint32 outer_loop_limit = 5;
+    }
+    ConvLimit conv_limit = 11;
+    uint32 output_h_parallel = 12;
+    uint32 output_w_parallel = 13;
+    uint32 input_w_parallel = 16;
+    uint32 cascade_num = 14;
+    uint32 chain_num = 15;
+
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 input_channel_parallel = 2;
+      uint32 output_channel_parallel = 3;
+      uint32 pixel_parallel = 4;
+      uint32 output_h_parallel = 5;
+      uint32 output_w_parallel = 6;
+    }
+    repeated ParallelMode parallel_mode = 17;
+    uint32 small_channel = 18;
+    message BiasDupNum {
+      uint32 bias_dup_num = 1;
+      uint32 qlinear_8bit_bias_dup_num = 2;
+      uint32 qlinear_16bit_bias_dup_num = 3;
+    }
+    BiasDupNum bias_dup_num = 19;
+    bool is_three_term = 20;
+    bool NTConv = 21;
+  }
+
+  message Eltwise {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    Nonlinear nonlinear = 5;
+    enum ElewType {
+      add = 0;
+      mult = 1;
+      sub = 2;
+      max = 3;
+      min = 4;
+      div = 5;
+      equal = 6;
+      greater = 7;
+      greater_equal = 8;
+      less = 9;
+      less_equal = 10;
+      not_op = 11;
+      neg = 12;
+      abs = 13;
+      exp = 14;
+      elu = 15;
+      sqrt = 16;
+      and_op = 17;
+      or_op = 18;
+      clamp = 19;
+      relu = 20;
+      tanh = 21;
+      prelu = 22;
+      leaky_relu = 23;
+      relu_six = 24;
+      hsigmoid = 26;
+      hswish = 27;
+      sigmoid = 28;
+      qlinear_sigmoid = 29;
+      pow = 30;
+      gelu = 31;
+      l2norm = 32;
+      qlinear_swish = 33;
+    }
+    repeated ElewType elew_type = 6;
+    message ConvCascade {
+        uint32 pixel_parallel = 1;
+    }
+    ConvCascade conv_cascade = 7;
+    uint32 output_h_parallel = 8;
+    uint32 output_w_parallel = 9;
+    uint32 input_w_parallel = 10;
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 channel_parallel = 2;
+      uint32 pixel_parallel = 3;
+      uint32 output_h_parallel = 4;
+      uint32 output_w_parallel = 5;
+    }
+    message ParallelModeForL2Norm {
+      repeated ParallelMode parallel_mode = 1;
+    }
+    message ParallelModeForDiv {
+      repeated ParallelMode parallel_mode = 1;
+    }
+    repeated ParallelMode parallel_mode = 11;
+    bool is_broadcast = 12;
+    ParallelModeForL2Norm parallel_mode_l2_norm = 13;
+    ParallelModeForDiv parallel_mode_div = 14;
+    bool elew_add_act_disable = 15;
+  }
+
+    message QEltwise {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    Nonlinear nonlinear = 5;
+    enum QElewType {
+      add = 0;
+      requantize = 28;
+      relu = 2;
+      tanh = 21;
+      sub = 3;
+      div = 5;
+      clamp = 19;
+      mult = 1;
+      leaky_relu = 23;
+    }
+    repeated QElewType qelew_type = 6;
+    message ConvCascade {
+        uint32 pixel_parallel = 1;
+    }
+    ConvCascade conv_cascade = 7;
+    uint32 output_h_parallel = 8;
+    uint32 output_w_parallel = 9;
+    bool is_broadcast = 10;
+  }
+
+  message Bf16_Eltwise {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    Nonlinear nonlinear = 5;
+    enum ElewType {
+      add = 0;
+      mult = 1;
+      sub = 2;
+      max = 3;
+      min = 4;
+      div = 5;
+      equal = 6;
+      greater = 7;
+      greater_equal = 8;
+      less = 9;
+      less_equal = 10;
+      not_op = 11;
+      neg = 12;
+      abs = 13;
+      exp = 14;
+      elu = 15;
+      sqrt = 16;
+      and_op = 17;
+      or_op = 18;
+      clamp = 19;
+      relu = 20;
+      tanh = 21;
+      prelu = 22;
+      leaky_relu = 23;
+      relu_six = 24;
+      hsigmoid = 26;
+      hswish = 27;
+      sigmoid = 28;
+      qlinear_sigmoid = 29;
+      pow = 30;
+      gelu = 31;
+      l2norm = 32;
+      qlinear_swish = 33;
+    }
+    repeated ElewType elew_type = 6;
+    message ConvCascade {
+        uint32 pixel_parallel = 1;
+    }
+    ConvCascade conv_cascade = 7;
+    uint32 output_h_parallel = 8;
+    uint32 output_w_parallel = 9;
+    uint32 input_w_parallel = 10;
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 channel_parallel = 2;
+      uint32 pixel_parallel = 3;
+      uint32 output_h_parallel = 4;
+      uint32 output_w_parallel = 5;
+    }
+    message ParallelModeForL2Norm {
+      repeated ParallelMode parallel_mode = 1;
+    }
+    message ParallelModeForDiv {
+      repeated ParallelMode parallel_mode = 1;
+    }
+    repeated ParallelMode parallel_mode = 11;
+    bool is_broadcast = 12;
+    ParallelModeForL2Norm parallel_mode_l2_norm = 13;
+    ParallelModeForDiv parallel_mode_div = 14;
+    bool elew_add_act_disable = 15;
+  }
+
+  message Pool {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    enum PoolType {
+      max = 0;
+      avg = 1;
+      max_reduce = 2;
+    }
+    repeated PoolType pool_type = 5;
+    Nonlinear nonlinear = 6;
+    message AvgLimit {
+	    string kernel_size = 1;
+	    string stride = 2;
+    }
+    AvgLimit avg_limit = 7;
+    message MaxLimit {
+	    string kernel_size = 1;
+	    string stride = 2;
+    }
+    MaxLimit max_limit = 8;
+    uint32 output_h_parallel = 9;
+    uint32 output_w_parallel = 10;
+    uint32 input_w_parallel = 11;
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 channel_parallel = 2;
+      uint32 pixel_parallel = 3;
+      uint32 output_h_parallel = 4;
+      uint32 output_w_parallel = 5;
+      repeated PoolType pool_type = 6;
+    }
+    repeated ParallelMode parallel_mode = 12;
+  }
+
+  message Dwconv {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    string weight_bank = 5;
+    string bias_bank = 6;
+    Nonlinear nonlinear = 7;
+    message DwconvLimit {
+      string kernel_size = 1;
+      string stride = 2;
+      string dilation = 3;
+    }
+    DwconvLimit dwconv_limit = 8;
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 channel_parallel = 2;
+      uint32 pixel_parallel = 3;
+      uint32 output_h_parallel = 4;
+      uint32 output_w_parallel = 5;
+    }
+    repeated ParallelMode parallel_mode = 9;
+    uint32 output_h_parallel = 10;
+    uint32 output_w_parallel = 11;
+    uint32 input_w_parallel = 12;
+    message BiasDupNum {
+      uint32 bias_dup_num = 1;
+      uint32 qlinear_8bit_bias_dup_num = 2;
+      uint32 qlinear_16bit_bias_dup_num = 3;
+    }
+    BiasDupNum bias_dup_num = 13;
+  }
+
+  message Move {
+    uint32 input_channel_parallel = 1;
+    uint32 output_channel_parallel = 2;
+    uint32 pixel_parallel = 3;
+    repeated string input_bank = 4;
+    repeated string output_bank = 5;
+  }
+
+  message Threshold {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    string param_bank = 5;
+  }
+
+  message Alu {
+    uint32 channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    string weight_bank = 5;
+    string bias_bank = 6;
+    enum AluType {
+        dwconv = 0;
+        prelu = 1;
+        avg_pool = 2;
+        max_pool = 3;
+        leaky_relu = 4;
+        max_reduce = 5;
+        dwconv_no_bias = 6;
+        hsigmoid = 7;
+        w16b0 = 8;
+        macc_temp = 9;
+        comp_temp = 10;
+        elew_add = 11;
+        elew_mult = 12;
+        softmax = 13;
+    }
+    repeated AluType alu_type = 7;
+    Nonlinear nonlinear = 8;
+    message AluLimit {
+      string kernel_size = 1;
+      string stride = 2;
+      string stride_out_h = 3;
+    }
+    AluLimit alu_limit = 9;
+    PadLimit pad_limit = 10;
+  }
+
+  message SOP {
+    uint32 channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+    repeated string input_bank = 4;
+    repeated string output_bank = 5;
+    enum SOPType {
+      reshape = 0;
+      hsigmoid = 1;
+      softmax = 2;
+      upsample = 3;
+    }
+    repeated SOPType alu_type = 6;
+    Nonlinear nonlinear = 7;
+    message SOPLimit {
+      string kernel_size = 1;
+      string stride = 2;
+    }
+    SOPLimit sop_limit = 8;
+  }
+
+  message Core {
+    uint32 input_channel_parallel = 1;
+    uint32 output_channel_parallel = 2;
+    uint32 pixel_parallel = 3;
+    uint32 output_h_parallel = 4;
+    uint32 output_w_parallel = 5;
+    Aietile aietile = 6;
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 input_channel_parallel = 2;
+      uint32 output_channel_parallel = 3;
+      uint32 pixel_parallel = 4;
+      uint32 output_h_parallel = 5;
+      uint32 output_w_parallel = 6;
+    }
+    repeated ParallelMode parallel_mode = 7;
+  }
+
+  message HardSoftmax {
+    uint32 input_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message HardSigmoid {
+    uint32 input_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message Norm {
+    uint32 input_channel_parallel = 1;
+    uint32 pixel_parallel = 2;
+    repeated string input_bank = 3;
+    repeated string output_bank = 4;
+    repeated string weight_bank = 5;
+    repeated string bias_bank = 6;
+    Nonlinear nonlinear = 7;
+    enum NormType {
+      instancenorm = 0;
+      layernorm = 1;
+      groupnorm = 2;
+    }
+    repeated NormType norm_type = 8;    
+    uint32 output_h_parallel = 9;
+    uint32 output_w_parallel = 10;
+    uint32 input_w_parallel = 11;
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 channel_parallel = 2;
+      uint32 pixel_parallel = 3;
+      uint32 output_h_parallel = 4;
+      uint32 output_w_parallel = 5;
+    }
+    repeated ParallelMode parallel_mode = 12;
+    bool is_broadcast = 13;
+  }
+
+  message Matmul {
+    uint32 input_channel_parallel = 1;
+    uint32 output_channel_parallel = 2;
+    uint32 pixel_parallel = 3;
+    repeated string input_bank = 4;
+    string weight_bank = 6;
+    string bias_bank = 7;
+    Nonlinear nonlinear = 9;
+    repeated string output_bank = 10;
+    uint32 output_h_parallel = 12;
+    uint32 output_w_parallel = 13;
+
+    message ParallelMode {
+      uint32 mode_number = 1;
+      uint32 input_channel_parallel = 2;
+      uint32 output_channel_parallel = 3;
+      uint32 pixel_parallel = 4;
+      uint32 output_h_parallel = 5;
+      uint32 output_w_parallel = 6;
+    }
+    repeated ParallelMode parallel_mode = 17;
+    message BiasDupNum {
+      uint32 bias_dup_num = 1;
+      uint32 qlinear_8bit_bias_dup_num = 2;
+      uint32 qlinear_16bit_bias_dup_num = 3;
+    }
+    BiasDupNum bias_dup_num = 19;
+  }
+
+  message Reduce {
+    uint32 input_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+    enum reduceType {
+      mean = 0;
+      sum = 1;
+      max = 2;
+      min = 3;
+    }
+    repeated reduceType reduce_type = 4;
+  }
+
+  message Bf16_Reduce {
+    uint32 input_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+    enum reduceType {
+      mean = 0;
+      sum = 1;
+      max = 2;
+      min = 3;
+    }
+    repeated reduceType reduce_type = 4;
+  }
+
+  message Arg {
+    uint32 input_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+    enum argType {
+      max = 0;
+      min = 1;
+    }
+    repeated argType arg_type = 4;
+  }
+   message L2Norm {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+  message Exp {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message Tanh {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message QPow {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+    bool is_broadcast = 4;
+  }
+
+   message Sigmoid {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message Qlinear_sigmoid {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message Qlinear_swish {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  message Mac {
+    uint32 output_channel_parallel = 1;
+    uint32 output_h_parallel = 2;
+    uint32 output_w_parallel = 3;
+  }
+
+  string name = 1;
+  string type = 2;
+  uint64 isa_version = 3;
+  uint64 feature_code = 4;
+
+  repeated BankGroup bank_group = 5;
+
+  Load load_engine = 6;
+  Save save_engine = 7;
+  Conv conv_engine = 8;
+  Eltwise eltwise_engine = 9;
+  Pool pool_engine = 10;
+  Dwconv dwconv_engine = 11;
+  Move move_engine = 12;
+  Threshold threshold_engine = 13;
+  Alu alu_engine = 15;
+
+  Reduce reduce_engine = 23;
+  Arg arg_engine = 24;
+  HardSoftmax hard_softmax_engine = 25;
+  HardSigmoid hard_sigmoid_engine = 26;
+  Exp exp_engine = 27;
+  Tanh tanh_engine = 28;
+  Qlinear_sigmoid qlinear_sigmoid_engine = 29;
+  Norm norm_engine = 30;
+  L2Norm l2_normalize_engine = 31;
+  QEltwise qeltwise_engine = 32;
+  Matmul matmul_engine = 33;
+  Qlinear_swish qlinear_swish_engine = 34;
+  Core core_engine = 35;
+  Sigmoid sigmoid_engine = 36;
+  Mac mac_engine = 37;
+  QPow qpow_engine = 38;
+
+  uint32 batch = 14;
+  string ipu_overlay_type = 16;
+  OverlayInfo overlay_info = 17;
+  repeated Memtile memtile = 18;
+  repeated Aietile aietile = 19;
+  repeated Shimtile shimtile = 20;
+  SOP aie_sp_engine = 21;
+
+  message Kernel {
+      Conv conv_kernel = 1;
+      Eltwise eltwise_kernel = 2;
+      Nonlinear nonlinear_kernel = 3;
+      Pool pool_kernel = 4;
+      Dwconv dwconv_kernel = 5;
+      Arg arg_kernel = 6;
+      Reduce reduce_kernel = 7;
+      uint32 pm_size = 8;
+      repeated string ops = 9;
+      bool has_optimized_3x3_dwc = 10;
+      bool has_optimized_conv_zero_result = 11;
+      Pool globalpool_kernel = 12;
+      Exp exp_kernel = 13;
+      Tanh tanh_kernel = 14;
+      Qlinear_sigmoid qlinear_sigmoid_kernel = 15;
+      Norm norm_kernel = 16;
+      L2Norm l2_normalize_kernel = 17;
+      QEltwise qeltwise_kernel = 18;
+      Matmul matmul_kernel = 19;
+      uint32 aw_type = 20;
+      Qlinear_swish qlinear_swish_kernel = 21;
+      Sigmoid sigmoid_kernel = 22;
+      Bf16_Eltwise bf16_eltwise_kernel = 23;
+      Bf16_Reduce bf16_reduce_kernel = 24;
+      uint32 bf = 25;
+      Mac mac_kernel = 26;
+      QPow qpow_kernel = 27;
+  }
+
+  repeated Kernel kernels = 22;
+
+  message PDI_partition {
+    string name = 1;
+    string ID = 2;
+    repeated Kernel kernels = 3;
+    uint64 wrapper_size = 4;
+    uint32 stack_size = 5;
+    string rounding_mode = 6;
+  }
+
+  repeated PDI_partition PDI = 59;
+
+  message MatrixValue {
+    message CtrlIndex {
+      uint32 ctrl_shim_col_num = 1;
+      uint32 ctrl_shim_row_num = 2;
+      uint32 ctrl_shim_col_start = 3;
+      uint32 ctrl_shim_row_start = 4;
+      uint32 ctrl_shim_bd_num = 5;
+      uint32 ctrl_memtile_col_num = 6;
+      uint32 ctrl_memtile_row_num = 7;
+      uint32 ctrl_memtile_col_start = 8;
+      uint32 ctrl_memtile_row_start = 9;
+      uint32 ctrl_memtile_bd_num = 10;
+      uint32 ctrl_aie_col_num = 11;
+      uint32 ctrl_aie_row_num = 12;
+      uint32 ctrl_aie_col_start = 13;
+      uint32 ctrl_aie_row_start = 14;
+      uint32 ctrl_aie_bd_num = 15;
+      uint32 ctrl_memtile_lock_num = 16;
+      uint32 ctrl_aietile_lock_num = 17;
+      uint32 ctrl_casc_num = 18;
+      uint32 ctrl_chain_num = 19;
+      uint32 ctrl_layer_param_size = 20;
+      uint32 ctrl_mt_base = 21;
+      uint32 ctrl_ifm_mt_base = 22;
+      uint32 ctrl_bias_mt_base = 23;
+      uint32 ctrl_wgt_core_ping = 24;
+      uint32 ctrl_wgt_core_pong = 25;
+      uint32 ctrl_bias_core_ping = 26;
+      uint32 ctrl_bias_core_pong = 27;
+    }
+    message MTLockInfo {
+      uint32 mt_lock_base_addr = 1;
+      uint32 mt_lock_offset = 2;
+    }
+    message ATLockInfo {
+      uint32 at_lock_base_addr = 1;
+      uint32 at_lock_offset = 2;
+    }
+    message ATChannelInfo {
+      uint32 at_ch_ctrl_base = 1;
+      uint32 at_ch_queue_base = 2;
+      uint32 at_num_channels = 3;
+      uint32 at_ch_idx_offset = 4;
+    }
+    message MTChannelInfo {
+      uint32 mt_ch_ctrl_base = 1;
+      uint32 mt_ch_queue_base = 2;
+      uint32 mt_ch_constant_pad_value_base = 3;
+      uint32 mt_num_channels = 4;
+      uint32 mt_ch_idx_offset = 5;
+      uint32 mt_ch_constant_pad_value_offset = 6;
+    }
+    message ShimChannelInfo {
+      uint32 shim_ch_ctrl_base = 1;
+      uint32 shim_ch_queue_base = 2;
+      uint32 shim_num_channels = 3;
+      uint32 shim_ch_idx_offset = 4;
+    }
+    CtrlIndex ctrl_index = 1;
+    MTLockInfo mt_lock_info = 2;
+    ATLockInfo at_lock_info = 3;
+    ATChannelInfo at_channel_info = 4;
+    MTChannelInfo mt_channel_info = 5;
+    ShimChannelInfo shim_channel_info = 6;
+  }
+  MatrixValue matrix_value = 60;
+}

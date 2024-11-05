@@ -1,0 +1,1563 @@
+# Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+# Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+name: "DPUCV3DX8G_ISA0_C8SP2"
+ipu_overlay_type: "2x4x2_Overlay"
+type: "DPUCV3DX8G"
+isa_version: 0x00
+feature_code: 0x9
+
+bank_group {
+  name: "VB0"
+  type: "Virtual"
+  base_id: 0
+  bank_num: 1
+  bank_width: 8
+  bank_depth: 131072
+}
+
+bank_group {
+  name: "DM0"
+  type: "DataMemory"
+  base_id: 1
+  bank_num: 1
+  bank_width: 8
+  bank_depth: 131072
+}
+
+bank_group {
+  name: "SD0"
+  type: "ShimDma"
+  base_id: 2
+  bank_num: 1
+  bank_width: 8
+  bank_depth: 131072
+}
+
+load_engine {
+  channel_parallel: 8
+  output_bank: "VB0"
+  stream_num: 4
+}
+
+save_engine {
+  channel_parallel: 8
+  input_bank: "VB0"
+  stream_num: 2
+}
+
+conv_engine {
+  input_channel_parallel: 8
+  output_channel_parallel: 32
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  output_bank: "DM0"
+  weight_bank: "VB0"
+  bias_bank: "VB0"
+  channel_augmentation {
+    channel_num: 8
+  }
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: leaky_relu
+    nonlinear_type: hsigmoid
+    nonlinear_type: hswish
+    nonlinear_type: relu_six
+    nonlinear_type: prelu
+  }
+  conv_limit {
+    kernel_size: "1-16"
+    stride: "1-4"
+    inner_loop_limit: 8
+    outer_loop_limit: 2
+  }
+  parallel_mode {
+    mode_number: 0
+    input_channel_parallel: 8
+    output_channel_parallel: 64
+    pixel_parallel: 2
+    output_h_parallel: 2
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 1
+    input_channel_parallel: 8
+    output_channel_parallel: 32
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 8
+  }
+  bias_dup_num {
+    bias_dup_num: 4
+    qlinear_8bit_bias_dup_num: 4
+    qlinear_16bit_bias_dup_num: 4
+  }
+}
+
+eltwise_engine {
+  channel_parallel: 32
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  elew_type: add
+  elew_type: mult
+  elew_type: sub
+  elew_type: div
+  elew_type: exp
+  elew_type: tanh
+  elew_type: hsigmoid
+  elew_type: sigmoid
+  elew_type: qlinear_sigmoid
+  elew_type: pow
+  elew_type: sqrt
+  elew_type: gelu
+  elew_type: relu
+  elew_type: relu_six
+  elew_type: prelu
+  elew_type: leaky_relu
+  elew_type: hsigmoid
+  elew_type: hswish
+  elew_type: l2norm
+  elew_type: max
+  elew_type: min
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: relu_six
+    nonlinear_type: prelu
+    nonlinear_type: leaky_relu
+  }
+  output_h_parallel: 4
+  output_w_parallel: 8
+  parallel_mode {
+    mode_number: 0
+    channel_parallel: 8
+    pixel_parallel: 8
+    output_h_parallel: 8
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 1
+    channel_parallel: 8
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 64
+  }
+  parallel_mode {
+    mode_number: 2
+    channel_parallel: 64
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 3
+    channel_parallel: 8
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 16
+  }
+  parallel_mode {
+    mode_number: 4
+    channel_parallel: 8
+    pixel_parallel: 2
+    output_h_parallel: 2
+    output_w_parallel: 32
+  }
+  parallel_mode {
+    mode_number: 5
+    channel_parallel: 16
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 6
+    channel_parallel: 32
+    pixel_parallel: 2
+    output_h_parallel: 2
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 7
+    channel_parallel: 16
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 32
+  }
+  parallel_mode {
+    mode_number: 8
+    channel_parallel: 32
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 16
+  }
+  parallel_mode {
+    mode_number: 9
+    channel_parallel: 16
+    pixel_parallel: 2
+    output_h_parallel: 2
+    output_w_parallel: 16
+  }
+  parallel_mode_l2_norm{
+    parallel_mode {
+      mode_number: 0
+      channel_parallel: 16
+      pixel_parallel: 1
+      output_h_parallel: 1
+      output_w_parallel: 8
+    }
+    parallel_mode {
+      mode_number: 1
+      channel_parallel: 16
+      pixel_parallel: 8
+      output_h_parallel: 8
+      output_w_parallel: 1
+    }
+    parallel_mode {
+      mode_number: 2
+      channel_parallel: 16
+      pixel_parallel: 2
+      output_h_parallel: 2
+      output_w_parallel: 4
+    }
+    parallel_mode {
+      mode_number: 3
+      channel_parallel: 16
+      pixel_parallel: 4
+      output_h_parallel: 4
+      output_w_parallel: 2
+    }
+  }
+}
+
+pool_engine {
+  channel_parallel: 16
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  pool_type: max
+  output_h_parallel: 4
+  output_w_parallel: 8
+  parallel_mode {
+    mode_number: 0
+    channel_parallel: 16
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 8
+  }
+  nonlinear {
+    nonlinear_type: relu
+  }
+  max_limit {
+    kernel_size: "1-256"
+    stride: "1-256"
+  }
+}
+
+dwconv_engine {
+  channel_parallel: 16
+  pixel_parallel: 16
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "VB0"
+  bias_bank: "VB0"
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: relu_six
+    nonlinear_type: hsigmoid
+    nonlinear_type: hswish
+  }
+  dwconv_limit {
+    kernel_size: "1-256"
+    stride: "1-256"
+  }
+  parallel_mode {
+    mode_number: 0
+    channel_parallel: 16
+    pixel_parallel: 16
+    output_h_parallel: 16
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 1
+    channel_parallel: 8
+    pixel_parallel: 32
+    output_h_parallel: 32
+    output_w_parallel: 8
+  }
+  bias_dup_num {
+    bias_dup_num: 4
+    qlinear_8bit_bias_dup_num: 4
+    qlinear_16bit_bias_dup_num: 4
+  }
+}
+norm_engine {
+  input_channel_parallel: 128
+  pixel_parallel: 1
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "VB0"
+  bias_bank: "VB0"
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: relu_six
+  }
+  norm_type: instancenorm
+  norm_type: layernorm
+  output_h_parallel: 1
+  output_w_parallel: 1
+  input_w_parallel: 1
+  parallel_mode {
+    mode_number: 0
+    channel_parallel: 128
+    pixel_parallel: 1
+    output_h_parallel:1
+    output_w_parallel: 1
+  }
+  parallel_mode {
+    mode_number: 1
+    channel_parallel: 64
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 1
+  }
+#for layernorm when h*w <= 4
+  parallel_mode {
+    mode_number: 2
+    channel_parallel: 128
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 4
+  }
+  parallel_mode {
+    mode_number: 3
+    channel_parallel: 128
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 1
+  }
+  parallel_mode {
+    mode_number: 4
+    channel_parallel: 128
+    pixel_parallel: 2
+    output_h_parallel: 2
+    output_w_parallel: 2
+  }
+#for layernorm when h*w > 4
+  parallel_mode {
+    mode_number: 5
+    channel_parallel: 128
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 6
+    channel_parallel: 128
+    pixel_parallel: 8
+    output_h_parallel: 8
+    output_w_parallel: 1
+  }
+  parallel_mode {
+    mode_number: 7
+    channel_parallel: 128
+    pixel_parallel: 2
+    output_h_parallel: 2
+    output_w_parallel: 4
+  }
+  parallel_mode {
+    mode_number: 8
+    channel_parallel: 128
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 2
+  }
+}
+matmul_engine {
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "VB0"
+  bias_bank: "VB0"
+  input_channel_parallel: 8
+  output_channel_parallel: 32
+  pixel_parallel: 1
+  output_h_parallel: 1
+  output_w_parallel: 8
+}
+
+overlay_info {
+  aienum_row_num: 4
+  aienum_col_num: 2
+  memtile_num: 2
+  shimtile_num: 2
+  memtile_row_num: 1
+  aie_read_split_stream_num_per_col: 2
+  aie_read_broadcast_stream_num_per_col: 1
+  aie_write_merge_stream_num_per_col: 2
+  shim_read_stream_num_per_col: 2
+  shim_write_stream_num_per_col: 1
+}
+
+core_engine {
+  input_channel_parallel: 8
+  output_channel_parallel: 16
+  pixel_parallel: 1
+  output_h_parallel: 1
+  output_w_parallel: 8
+  aietile {
+    name: "aie_tile"
+    memory_size: 65536
+  }
+  parallel_mode {
+    mode_number: 0
+    input_channel_parallel: 8
+    output_channel_parallel: 16
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 1
+    input_channel_parallel: 8
+    output_channel_parallel: 8
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 2
+    input_channel_parallel: 16
+    output_channel_parallel: 16
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 1
+  }
+#for layernorm
+  parallel_mode {
+    mode_number: 3
+    input_channel_parallel: 128
+    output_channel_parallel: 128
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 1
+  }
+#for reduction
+  parallel_mode {
+    mode_number: 4
+    input_channel_parallel: 8
+    output_channel_parallel: 8
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 4
+  }
+}
+
+reduce_engine {
+  input_channel_parallel: 64
+  output_h_parallel: 1
+  output_w_parallel: 4
+  reduce_type: mean
+  reduce_type: sum
+  reduce_type: min
+  reduce_type: max
+}
+
+hard_softmax_engine{
+  input_channel_parallel: 4
+  output_h_parallel: 1
+  output_w_parallel: 1
+}
+
+batch: 1
+
+
+matrix_value {
+  ctrl_index {
+    ctrl_shim_col_num : 4
+    ctrl_shim_row_num : 1
+    ctrl_shim_col_start : 0
+    ctrl_shim_row_start : 0
+    ctrl_shim_bd_num : 16
+    ctrl_memtile_col_num : 5
+    ctrl_memtile_row_num : 1
+    ctrl_memtile_col_start : 0
+    ctrl_memtile_row_start : 1
+    ctrl_memtile_bd_num : 48
+    ctrl_aie_col_num : 5
+    ctrl_aie_row_num : 4
+    ctrl_aie_col_start : 0
+    ctrl_aie_row_start : 2
+    ctrl_aie_bd_num : 16
+    ctrl_memtile_lock_num : 64
+    ctrl_aietile_lock_num : 16
+    ctrl_casc_num : 4
+    ctrl_chain_num : 4
+    ctrl_layer_param_size : 64
+    ctrl_mt_base : 0x80000
+    ctrl_ifm_mt_base : 0x80000
+    ctrl_bias_mt_base : 0x80000
+    ctrl_wgt_core_ping : 0x0
+    ctrl_wgt_core_pong : 0x8000
+    ctrl_bias_core_ping : 0x0
+    ctrl_bias_core_pong : 0x8000
+  }
+  mt_lock_info {
+    mt_lock_base_addr : 0xc0000
+    mt_lock_offset : 0x10
+  }
+  at_lock_info {
+    at_lock_base_addr : 0x1f000
+    at_lock_offset : 0x10
+  }
+  at_channel_info {
+    at_ch_ctrl_base : 0x1de00
+    at_ch_queue_base : 0x1de04
+    at_num_channels : 0x2
+    at_ch_idx_offset : 0x8
+
+  }
+  mt_channel_info {
+    mt_ch_ctrl_base : 0xa0600
+    mt_ch_queue_base : 0xa0604
+    mt_ch_constant_pad_value_base : 0xa06e0
+    mt_num_channels : 0x6
+    mt_ch_idx_offset : 0x8
+    mt_ch_constant_pad_value_offset : 0x4
+  }
+  shim_channel_info {
+    shim_ch_ctrl_base : 0x1d200
+    shim_ch_queue_base : 0x1d204
+    shim_num_channels : 0x2
+    shim_ch_idx_offset : 0x8
+  }
+}
+
+#######################################
+# CONV
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+    conv_limit {
+        stride: "1,2,4"
+    }
+  }
+  pm_size : 7216
+  ops : "conv2d-fix"
+}
+
+# DWC
+kernels {
+  dwconv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 7328
+  ops : "depthwise-conv2d-fix"
+}
+
+# DWC_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+  }
+  dwconv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 11712
+  ops : "conv2d-fix"
+  ops : "depthwise-conv2d-fix"
+}
+
+# ELEW_ADD
+kernels {
+  eltwise_kernel {
+    elew_type : add
+    elew_add_act_disable : 1
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 3856
+  ops : "eltwise-fix"
+}
+
+# ELEW_ADD_LEAKY_PRELU
+kernels {
+  eltwise_kernel {
+    elew_type : add
+    elew_add_act_disable : 0
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  pm_size : 3856
+  ops : "eltwise-fix"
+}
+
+# CONV_LEAKY_PRELU
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  pm_size : 7488
+  ops : "conv2d-fix"
+}
+
+# ELEW_ADD_BROADCAST
+kernels {
+  eltwise_kernel {
+    elew_type : add
+    is_broadcast : 1
+  }
+  pm_size : 3856
+  ops : "eltwise-fix"
+}
+
+# CONV_STRIDE_3
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+    conv_limit {
+      stride: "1,2,3,4"
+    }
+  }
+  pm_size : 72163
+  ops : "conv2d-fix"
+}
+
+# PRELU_CONV_STRIDE_3
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+    conv_limit {
+      stride: "1,2,3,4"
+    }
+  }
+  pm_size : 72169
+  ops : "conv2d-fix"
+}
+
+# ELEW_L2_NORMALIZE
+kernels {
+  eltwise_kernel {
+    elew_type : l2norm
+  }
+  pm_size : 10017
+  ops : "eltwise-fix"
+}
+
+# ELEW_MAX
+kernels {
+  eltwise_kernel {
+    elew_type : max
+  }
+  pm_size : 3800
+  ops : "eltwise-fix"
+}
+
+# ELEW_MUL_BROADCAST
+kernels {
+  eltwise_kernel {
+    elew_type : mult
+    is_broadcast : 1
+  }
+  pm_size : 3856
+  ops : "eltwise-fix"
+}
+
+# ELEW_MUL
+kernels {
+  eltwise_kernel {
+    elew_type : mult
+  }
+  pm_size : 3800
+  ops : "eltwise-fix"
+}
+
+# REDUCE_MEAN
+kernels {
+  reduce_kernel {
+    reduce_type : mean
+  }
+  pm_size : 10010
+  ops : "reduction_mean-fix"
+}
+
+# REDUCE_SUM
+kernels {
+  reduce_kernel {
+    reduce_type : sum
+  }
+  pm_size : 10010
+  ops : "reduction_sum-fix"
+}
+
+# SOFTMAX
+kernels {
+  pm_size : 1314
+  ops : "hard-softmax"
+}
+
+# TRANSPOSE
+kernels {
+  pm_size : 2512
+  aw_type : 0
+  ops : "transpose"
+}
+kernels {
+  pm_size : 2512
+  aw_type : 1
+  ops : "transpose"
+}
+kernels {
+  pm_size : 2512
+  aw_type : 2
+  ops : "transpose"
+}
+kernels {
+  pm_size : 2512
+  aw_type : 3
+  ops : "transpose"
+}
+
+# CONV_RELU_ELEW_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 8112
+  ops : "conv2d-fix"
+  ops : "eltwise-fix"
+}
+
+# CONV_RELU_ELEW_LEAKY_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  pm_size : 8112
+  ops : "conv2d-fix"
+  ops : "eltwise-fix"
+}
+
+# CONV_LEAKY_RELU_ELEW_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 8112
+  ops : "conv2d-fix"
+  ops : "eltwise-fix"
+}
+
+# CONV_LEAKY_RELU_ELEW_LEAKY_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  pm_size : 8112
+  ops : "conv2d-fix"
+  ops : "eltwise-fix"
+}
+
+# CONV_HSIG_HSWISH_ELEW_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: hswish
+      nonlinear_type: hsigmoid
+    }
+  }
+  eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 8112
+  ops : "conv2d-fix"
+  ops : "eltwise-fix"
+}
+
+# CONV_HSIG_HSWISH_ELEW_LEAKY_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: hswish
+      nonlinear_type: hsigmoid
+    }
+  }
+  eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  pm_size : 8112
+  ops : "conv2d-fix"
+  ops : "eltwise-fix"
+}
+
+# ELEW_LEAKY_PRELU
+kernels {
+  eltwise_kernel {
+    elew_type : leaky_relu
+    elew_type : prelu
+  }
+  pm_size : 3800
+  ops : "eltwise-fix"
+}
+
+# MAXPOOL
+kernels {
+  pool_kernel {
+    pool_type : max
+  }
+  pm_size : 2721
+  aw_type: 0
+  ops : "pool-fix"
+}
+
+# ELEW_LUT_SIGMOID
+kernels {
+  eltwise_kernel {
+    elew_type : sigmoid
+  }
+  pm_size : 10017
+  ops : "eltwise-fix"
+}
+
+# BFP16_CONV
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+    conv_limit {
+      stride: "1,2,4"
+    }
+  }
+  pm_size : 7216
+  bf : 0
+  ops : "bfp16-conv2d"
+}
+
+# BFP16_CONV
+kernels {
+  conv_kernel {
+    nonlinear {
+    }
+  }
+  pm_size : 886
+  bf : 0
+  ops : "bfp16-conv2d"
+}
+
+# BFP16_CONV_BF1
+kernels {
+  conv_kernel {
+    nonlinear {
+    }
+  }
+  pm_size : 886
+  bf : 1
+  ops : "bfp16-conv2d"
+}
+
+# BFP16_CONV_BF2
+kernels {
+  conv_kernel {
+    nonlinear {
+    }
+  }
+  pm_size : 886
+  bf : 2
+  ops : "bfp16-conv2d"
+}
+
+# BFP16_CONV_BF3
+kernels {
+  conv_kernel {
+    nonlinear {
+    }
+  }
+  pm_size : 886
+  bf : 3
+  ops : "bfp16-conv2d"
+}
+
+# BFP16_CONV_LEAKY_PRELU
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: leaky_relu
+      nonlinear_type: prelu
+    }
+  }
+  pm_size : 886
+  bf : 0
+  ops : "bfp16-conv2d"
+}
+
+# BF16_SOFTMAX
+kernels {
+  pm_size : 1314
+  ops : "bf16-softmax"
+}
+
+# BF16_REDUCE_SUM
+kernels {
+  bf16_reduce_kernel {
+    reduce_type : sum
+  }
+  pm_size : 10010
+  ops : "bf16-reduction_sum"
+}
+
+# BF16_ELEW_ADD_LEAKY_PRELU
+kernels {
+  bf16_eltwise_kernel {
+    elew_type : add
+    nonlinear {
+      nonlinear_type: leaky_relu
+      nonlinear_type: prelu
+    }
+  }
+  pm_size : 38500
+  ops : "bf16-eltwise"
+}
+
+# BF16_ELEW_LEAKY_PRELU
+kernels {
+  bf16_eltwise_kernel {
+    elew_type : leaky_relu
+    elew_type : prelu
+  }
+  pm_size : 38500
+  ops : "bf16-eltwise"
+}
+
+# BF16_ELEW_MUL_BROADCAST
+kernels {
+  bf16_eltwise_kernel {
+    elew_type : mult
+    is_broadcast : 1
+  }
+  pm_size : 3856
+  ops : "bf16-eltwise"
+}
+
+# BF16_ELEW_MAX
+kernels {
+  bf16_eltwise_kernel {
+    elew_type : max
+  }
+  pm_size : 3800
+  ops : "bf16-eltwise"
+}
+
+# BF16_ELEW_L2_NORMALIZE
+kernels {
+  bf16_eltwise_kernel {
+    elew_type : l2norm
+  }
+  pm_size : 10017
+  ops : "bf16-eltwise"
+}
+
+# BF16_CONV_RELU_ELEW_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  bf16_eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 8112
+  ops : "bfp16-conv2d"
+  ops : "bf16-eltwise"
+}
+
+# BF16_CONV_LEAKY_RELU_ELEW_RELU_FUSION
+kernels {
+  conv_kernel {
+    nonlinear {
+      nonlinear_type: prelu
+      nonlinear_type: leaky_relu
+    }
+  }
+  bf16_eltwise_kernel {
+    elew_type : add
+    elew_type : mult
+    nonlinear {
+      nonlinear_type: relu
+      nonlinear_type: relu_six
+    }
+  }
+  pm_size : 8112
+  ops : "bfp16-conv2d"
+  ops : "bf16-eltwise"
+}
+#####################################
+# PDI Partition
+#######################################
+#for simple_F1_F2_U_V_xint8_op.h
+PDI {
+  name : "DPU_PDI_0"
+  ID : "0"
+  # CONV
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+      conv_limit {
+        stride: "1,2,4"
+      }
+    }
+    pm_size : 7216
+    ops : "conv2d-fix"
+  },
+  # ELEW_ADD
+  kernels {
+    eltwise_kernel {
+      elew_type : add
+      elew_add_act_disable : 0
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 3856
+    ops : "eltwise-fix"
+  },
+  # ELEW_L2_NORMALIZE
+  kernels {
+    eltwise_kernel {
+      elew_type : l2norm
+    }
+    pm_size : 10017
+    ops : "eltwise-fix"
+  },
+  # ELEW_MAX
+  kernels {
+    eltwise_kernel {
+      elew_type : max
+    }
+    pm_size : 3800
+    ops : "eltwise-fix"
+  },
+  # ELEW_MUL_BROADCAST
+  kernels {
+    eltwise_kernel {
+      elew_type : mult
+      is_broadcast : 1
+    }
+    pm_size : 3856
+    ops : "eltwise-fix"
+  },
+  # ELEW_MUL
+  kernels {
+    eltwise_kernel {
+      elew_type : mult
+    }
+    pm_size : 3800
+    ops : "eltwise-fix"
+  },
+  # CONV_LEAKY_PRELU
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    pm_size : 7488
+    ops : "conv2d-fix"
+  },
+  # REDUCE_MEAN
+  kernels {
+    reduce_kernel {
+      reduce_type : mean
+    }
+    pm_size : 10010
+    ops : "reduction_mean-fix"
+  },
+  # REDUCE_SUM
+  kernels {
+    reduce_kernel {
+      reduce_type : sum
+    }
+    pm_size : 10010
+    ops : "reduction_sum-fix"
+  },
+  # SOFTMAX
+  kernels {
+    pm_size : 1314
+    ops : "hard-softmax"
+  },
+  # TRANSPOSE
+  kernels {
+    pm_size : 2512
+    ops : "transpose"
+  },
+  # CONV_RELU_ELEW_RELU_FUSION
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    eltwise_kernel {
+      elew_type : add
+      elew_type : mult
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 8112
+    ops : "conv2d-fix"
+    ops : "eltwise-fix"
+  },
+  # CONV_LEAKY_RELU_ELEW_RELU_FUSION
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    eltwise_kernel {
+      elew_type: add
+      elew_type: mult
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size: 8112
+    ops: "conv2d-fix"
+    ops: "eltwise-fix"
+  },
+  # CONV_RELU_ELEW_LEAKY_RELU_FUSION
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    eltwise_kernel {
+      elew_type : add
+      elew_type : mult
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    pm_size : 8112
+    ops : "conv2d-fix"
+    ops : "eltwise-fix"
+  },
+  # ELEW_LEAKY_PRELU
+  kernels {
+    eltwise_kernel {
+      elew_type : leaky_relu
+      elew_type : prelu
+    }
+    pm_size : 3800
+    ops : "eltwise-fix"
+  },
+  # ELEW_ADD_LEAKY_PRELU
+  kernels {
+    eltwise_kernel {
+      elew_type : add
+      elew_add_act_disable : 0
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    pm_size : 3856
+    ops : "eltwise-fix"
+  }
+  rounding_mode: "DPU_ROUND"
+}
+#for simple_A3_C2_E_F1_U_V_xint8_op.h
+PDI {
+  name : "DPU_PDI_1"
+  ID : "1"
+  # CONV
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+      conv_limit {
+        stride: "1,2,4"
+      }
+    }
+    pm_size : 7216
+    ops : "conv2d-fix"
+  },
+  # DWC
+  kernels {
+    dwconv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 7328
+    ops : "depthwise-conv2d-fix"
+    has_optimized_3x3_dwc : 0
+  },
+  # ELEW_ADD_LEAKY_PRELU
+  kernels {
+    eltwise_kernel {
+      elew_type : add
+      elew_add_act_disable : 0
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    pm_size : 3856
+    ops : "eltwise-fix"
+  },
+  # CONV_LEAKY_PRELU
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    pm_size : 7488
+    ops : "conv2d-fix"
+  },
+  # MAXPOOL
+  kernels {
+    pool_kernel {
+      pool_type : max
+    }
+    pm_size : 2721
+    aw_type: 0
+    ops : "pool-fix"
+  },
+  # ELEW_ADD
+  kernels {
+    eltwise_kernel {
+      elew_type : add
+      elew_add_act_disable : 0
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 3856
+    ops : "eltwise-fix"
+  },
+  # ELEW_MUL
+  kernels {
+    eltwise_kernel {
+      elew_type : mult
+    }
+    pm_size : 3800
+    ops : "eltwise-fix"
+  },
+  # ELEW_MUL_BROADCAST
+  kernels {
+    eltwise_kernel {
+      elew_type : mult
+      is_broadcast : 1
+    }
+    pm_size : 3856
+    ops : "eltwise-fix"
+  },
+  # ELEW_LEAKY_PRELU
+  kernels {
+    eltwise_kernel {
+      elew_type : leaky_relu
+      elew_type : prelu
+    }
+    pm_size : 3800
+    ops : "eltwise-fix"
+  },
+  # ELEW_L2_NORMALIZE
+  kernels {
+    eltwise_kernel {
+      elew_type : l2norm
+    }
+    pm_size : 10017
+    ops : "eltwise-fix"
+  },
+  # TRANSPOSE
+  kernels {
+    pm_size : 2512
+    ops : "transpose"
+  },
+  # ELEW_LUT_SIGMOID
+  kernels {
+    eltwise_kernel {
+      elew_type : sigmoid
+    }
+    pm_size : 10017
+    ops : "eltwise-fix"
+  },
+  # CONV_RELU_ELEW_RELU_FUSION
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    eltwise_kernel {
+      elew_type : add
+      elew_type : mult
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 8112
+    ops : "conv2d-fix"
+    ops : "eltwise-fix"
+  }
+  rounding_mode: "DPU_ROUND"
+}
+#for simple_bfx_op.h
+PDI {
+  name : "DPU_PDI_2"
+  ID : "2"
+  # BFP16_CONV
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+      conv_limit {
+        stride: "1,2,4"
+      }
+    }
+    pm_size : 7216
+    bf : 0
+    ops : "bfp16-conv2d"
+  },
+  # BFP16_CONV_LEAKY_PRELU
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: leaky_relu
+        nonlinear_type: prelu
+      }
+    }
+    pm_size : 886
+    bf : 0
+    ops : "bfp16-conv2d"
+  },
+  # BF16_ELEW_ADD
+  kernels {
+    bf16_eltwise_kernel {
+      elew_type : add
+      nonlinear {
+        nonlinear_type: leaky_relu
+        nonlinear_type: prelu
+      }
+    }
+    pm_size : 38500
+    ops : "bf16-eltwise"
+  },
+  # BF16_ELEW_LEAKY_PRELU
+  kernels {
+    bf16_eltwise_kernel {
+      elew_type : leaky_relu
+      elew_type : prelu
+    }
+    pm_size : 38500
+    ops : "bf16-eltwise"
+  },
+  # BF16_ELEW_MUL_BROADCAST
+  kernels {
+    bf16_eltwise_kernel {
+      elew_type : mult
+      is_broadcast : 1
+    }
+    pm_size : 3856
+    ops : "bf16-eltwise"
+  },
+  # BF16_ELEW_MAX
+  kernels {
+    bf16_eltwise_kernel {
+      elew_type : max
+    }
+    pm_size : 3800
+    ops : "bf16-eltwise"
+  },
+  # BF16_ELEW_L2_NORMALIZE
+  kernels {
+    bf16_eltwise_kernel {
+      elew_type : l2norm
+    }
+    pm_size : 10017
+    ops : "bf16-eltwise"
+  },
+  # BF16_SOFTMAX
+  kernels {
+    pm_size : 1314
+    ops : "bf16-softmax"
+  },
+  # BF16_REDUCE_SUM
+  kernels {
+    bf16_reduce_kernel {
+      reduce_type : sum
+    }
+    pm_size : 10010
+    ops : "bf16-reduction_sum"
+  },
+  # TRANSPOSE
+  kernels {
+    pm_size : 2512
+    aw_type : 1
+    ops : "transpose"
+  },
+  # BF16_CONV_RELU_ELEW_RELU_FUSION
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    bf16_eltwise_kernel {
+      elew_type : add
+      elew_type : mult
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 8112
+    ops : "bfp16-conv2d"
+    ops : "bf16-eltwise"
+  },
+  # BF16_CONV_LEAKY_RELU_ELEW_RELU_FUSION
+  kernels {
+    conv_kernel {
+      nonlinear {
+        nonlinear_type: prelu
+        nonlinear_type: leaky_relu
+      }
+    }
+    bf16_eltwise_kernel {
+      elew_type : add
+      elew_type : mult
+      nonlinear {
+        nonlinear_type: relu
+        nonlinear_type: relu_six
+      }
+    }
+    pm_size : 8112
+    ops : "bfp16-conv2d"
+    ops : "bf16-eltwise"
+  }
+  rounding_mode: "PY3_ROUND"
+}

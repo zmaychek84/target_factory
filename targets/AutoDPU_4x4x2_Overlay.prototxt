@@ -1,0 +1,183 @@
+# Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+# Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+name: "AutoDPU_4x4x2_Overlay"
+type: "AutoDPU"
+isa_version: 0x00
+feature_code: 0x0
+bank_group {
+  name: "VB0"
+  type: "Virtual"
+  base_id: 0
+  bank_num: 1
+  bank_width: 4
+  bank_depth: 786432
+  memtile {
+    name: "VB0"
+    type: "Virtual"
+    row: 2
+    col: 3
+    bank_num: 6
+    bank_size_per_bank: 524288
+    row_offset: 0
+    col_offset: 0
+  }
+}
+bank_group {
+  name: "CONVW"
+  type: "Param"
+  base_id: 1
+  bank_num: 1
+  bank_width: 4
+  bank_depth: 262144
+  memtile {
+    name: "Ping"
+    type: "Param"
+    row: 2
+    col: 1
+    bank_num: 1
+    bank_size_per_bank: 524288
+    row_offset: 0
+    col_offset: 3
+  }
+}
+load_engine {
+  channel_parallel: 16
+  output_bank: "VB0"
+  load_ifm_port_num: 1
+  load_weights_port_num: 2
+}
+save_engine {
+  channel_parallel: 16
+  input_bank: "VB0"
+}
+conv_engine {
+  input_channel_parallel: 16
+  output_channel_parallel: 64
+  pixel_parallel: 4
+  cascade_num: 2
+  output_h_parallel: 4
+  output_w_parallel: 16
+  input_w_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "CONVW"
+  bias_bank: "CONVW"
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: leaky_relu
+  }
+  parallel_mode {
+    mode_number: 0
+    input_channel_parallel: 16
+    output_channel_parallel: 64
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 16
+  }
+  parallel_mode {
+    mode_number: 1
+    input_channel_parallel: 4
+    output_channel_parallel: 64
+    pixel_parallel: 8
+    output_h_parallel: 8
+    output_w_parallel: 16
+  }
+}
+eltwise_engine {
+  channel_parallel: 64
+  pixel_parallel: 4
+  output_h_parallel: 4
+  output_w_parallel: 16
+  input_w_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  elew_type: add
+  elew_type: mult
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: leaky_relu
+  }
+}
+pool_engine {
+  channel_parallel: 64
+  pixel_parallel: 4
+  output_h_parallel: 4
+  output_w_parallel: 16
+  input_w_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  pool_type: max
+  pool_type: avg
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: leaky_relu
+  }
+}
+dwconv_engine {
+  channel_parallel: 64
+  pixel_parallel: 4
+  output_h_parallel: 4
+  output_w_parallel: 16
+  input_w_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "CONVW"
+  bias_bank: "CONVW"
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: leaky_relu
+  }
+}
+overlay_info {
+  aienum_row_num: 4
+  aienum_col_num: 4
+  memtile_num: 5
+  shimtile_num: 1
+  memtile_row_num: 2
+  cascade_len: 2
+  aie_row_offset: 1
+  aie_col_offset: 0
+  aie_row_stride: 2
+  aie_col_stride: 1
+}
+core_engine {
+  input_channel_parallel: 8
+  output_channel_parallel: 16
+  pixel_parallel: 1
+  output_h_parallel: 1
+  output_w_parallel: 16
+  aietile {
+    name: "aie_tile"
+    memory_size: 65536
+  }
+  parallel_mode {
+    mode_number: 0
+    input_channel_parallel: 8
+    output_channel_parallel: 16
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 16
+  }
+  parallel_mode {
+    mode_number: 1
+    input_channel_parallel: 4
+    output_channel_parallel: 16
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 16
+  }
+}
+batch: 9

@@ -1,0 +1,151 @@
+# Copyright (C) 2022 Xilinx, Inc. All rights reserved.
+# Copyright (C) 2023 - 2024 Advanced Micro Devices, Inc. All rights reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may not
+# use this file except in compliance with the License. You may obtain a copy of
+# the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations under
+# the License.
+
+name: "DPUCV3DX8G_ISA0_C16B1"
+type: "DPUCV3DX8G"
+isa_version: 0x00
+feature_code: 0x10
+
+bank_group {
+  name: "VB0"
+  type: "Virtual"
+  base_id: 0
+  bank_num: 1
+  bank_width: 16
+  bank_depth: 131072
+}
+
+load_engine {
+  channel_parallel: 16
+  output_bank: "VB0"
+  stream_num: 4 # * icp_core_num(2)
+}
+
+save_engine {
+  channel_parallel: 16
+  input_bank: "VB0"
+  stream_num: 2 # * ocp_core_num(2)
+}
+
+conv_engine {
+  input_channel_parallel: 16
+  output_channel_parallel: 32
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "VB0"
+  bias_bank: "VB0"
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: leaky_relu
+    nonlinear_type: hsigmoid
+    nonlinear_type: hswish
+    nonlinear_type: relu_six
+  }
+  conv_limit {
+    kernel_size: "1-16"
+    stride: "1,2,4"
+  }
+  parallel_mode {
+    mode_number: 0
+    input_channel_parallel: 16
+    output_channel_parallel: 32
+    pixel_parallel: 4
+    output_h_parallel: 4
+    output_w_parallel: 8
+  }
+  parallel_mode {
+    mode_number: 1
+    input_channel_parallel: 8
+    output_channel_parallel: 32
+    pixel_parallel: 8
+    output_h_parallel: 8
+    output_w_parallel: 8
+  }
+}
+
+eltwise_engine {
+  channel_parallel: 32
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  elew_type: add
+  elew_type: mult
+  nonlinear {
+    nonlinear_type: relu
+  }
+}
+
+pool_engine {
+  channel_parallel: 32
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  pool_type: max
+  nonlinear {
+    nonlinear_type: relu
+  }
+  max_limit {
+    kernel_size: "1-256"
+    stride: "1-256"
+  }
+}
+
+dwconv_engine {
+  channel_parallel: 32
+  pixel_parallel: 4
+  input_bank: "VB0"
+  output_bank: "VB0"
+  weight_bank: "VB0"
+  bias_bank: "VB0"
+  nonlinear {
+    nonlinear_type: relu
+    nonlinear_type: relu_six
+  }
+  dwconv_limit {
+    kernel_size: "1-256"
+    stride: "1-256"
+  }
+}
+
+overlay_info {
+  aienum_row_num: 4
+  aienum_col_num: 4
+  memtile_num: 4
+  shimtile_num: 4
+  memtile_row_num: 1
+}
+
+core_engine {
+  input_channel_parallel: 8
+  output_channel_parallel: 16
+  pixel_parallel: 1
+  output_h_parallel: 1
+  output_w_parallel: 8
+  aietile {
+    name: "aie_tile"
+    memory_size: 65536
+  }
+  parallel_mode {
+    mode_number: 0
+    input_channel_parallel: 8
+    output_channel_parallel: 16
+    pixel_parallel: 1
+    output_h_parallel: 1
+    output_w_parallel: 8
+  }
+}
+
+batch: 1
